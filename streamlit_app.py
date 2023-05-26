@@ -23,7 +23,7 @@ fruits_to_show = my_fruit_list.loc[fruits_selected]
 streamlit.dataframe(fruits_to_show)
 # New section to display the response works!
 streamlit.header("Fruityvice Fruit Advice!")
-def gefruit_vicedata(this_fruit_choice):
+def getfruit_vicedata(this_fruit_choice):
     fruityvice_response = requests.get("https://fruityvice.com/api/fruit/"+this_fruit_choice)
     fruityvice_normalized = pandas.json_normalize(fruityvice_response.json())
     return fruityvice_normalized
@@ -32,18 +32,17 @@ try:
   if not fruit_choice:
     streamlit.error('Please select a fruit to get information')
   else:
-    back_from_function = gefruit_vicedata(fruit_choice)
+    back_from_function = getfruit_vicedata(fruit_choice)
     streamlit.dataframe(back_from_function)
 except URLError as e:
     streamlit.error()
 
-streamlit.stop()
-my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
-my_cur = my_cnx.cursor()
-my_cur.execute("select * from fruit_load_list")
-my_data_rows = my_cur.fetchall()
-streamlit.header("The fruit load list contains:")
-streamlit.dataframe(my_data_rows)
-additional_fruit = streamlit.text_input('What fruit do you like to add','Strawberry')
-streamlit.write('Thanks for adding:', additional_fruit)
-my_cur.execute("insert into PC_RIVERY_DB.PUBLIC.FRUIT_LOAD_LIST values ('from Strealit')")
+#snowflake related functions
+def get_fruit_load_list():
+    with my_cur.cursor() as my_cnx:
+    my_cur.execute("select * from fruit_load_list")
+    return my_cur.fetchall()
+if streamlit.button('Load fruit list!'):
+    my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
+    my_data_rows = get_fruit_load_list()
+    streamlit.dataframe(my_data_rows)
